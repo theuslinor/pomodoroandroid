@@ -1,23 +1,14 @@
 package com.example.pomodoro
 
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.CountDownTimer
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.Button
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -27,13 +18,26 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent{
-            PomodoroScreen()
+            PomodoroScreen(
+                onStart = {playSound(R.raw.startpomodoro)},
+                onPause = {playSound(R.raw.pausepomodoro)},
+                onFinish = {playSound(R.raw.finishpomodoro)}
+            )
         }
+    }
+
+    private fun playSound(soundResId: Int){
+        val mediaPlayer = MediaPlayer.create(this, soundResId)
+        mediaPlayer.start()
     }
 }
 
 @Composable
-fun PomodoroScreen(){
+fun PomodoroScreen(
+    onStart: () -> Unit,
+    onPause: () -> Unit,
+    onFinish: () -> Unit
+){
     var timeLeft by remember { mutableStateOf(25 * 60 * 1000L)} // 25 minutos em milissegundos.
     var isRunning by remember { mutableStateOf(false) }
     var timer: CountDownTimer? by remember { mutableStateOf(null) }
@@ -41,6 +45,7 @@ fun PomodoroScreen(){
     fun startTimer(){
         if (!isRunning) {
             isRunning = true
+            onStart()
             timer = object : CountDownTimer(timeLeft, 1000){
                 override fun onTick(millisUntilFinished: Long) {
                     timeLeft = millisUntilFinished
@@ -48,6 +53,7 @@ fun PomodoroScreen(){
 
                 override fun onFinish() {
                     isRunning = false
+                    onFinish()
                 }
             }.start()
         }
@@ -56,6 +62,7 @@ fun PomodoroScreen(){
     fun pauseTimer(){
         timer?.cancel()
         isRunning = false
+        onPause()
     }
 
     fun resetTimer(){
