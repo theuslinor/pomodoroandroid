@@ -3,6 +3,8 @@ package com.example.pomodoro
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.os.Handler
+import android.os.Looper
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -28,6 +30,7 @@ class MainActivity : ComponentActivity() {
 
     private fun playSound(soundResId: Int){
         val mediaPlayer = MediaPlayer.create(this, soundResId)
+        mediaPlayer.setVolume(100.0f, 100.0f)
         mediaPlayer.start()
     }
 }
@@ -38,7 +41,7 @@ fun PomodoroScreen(
     onPause: () -> Unit,
     onFinish: () -> Unit
 ){
-    var timeLeft by remember { mutableStateOf(25 * 60 * 1000L)} // 25 minutos em milissegundos.
+    var timeLeft by remember { mutableStateOf(/*25 * 60 * 1000L*/ 10 * 1000L)} // 25 minutos em milissegundos.
     var isRunning by remember { mutableStateOf(false) }
     var timer: CountDownTimer? by remember { mutableStateOf(null) }
 
@@ -46,16 +49,19 @@ fun PomodoroScreen(
         if (!isRunning) {
             isRunning = true
             onStart()
-            timer = object : CountDownTimer(timeLeft, 1000){
-                override fun onTick(millisUntilFinished: Long) {
-                    timeLeft = millisUntilFinished
-                }
 
-                override fun onFinish() {
-                    isRunning = false
-                    onFinish()
-                }
-            }.start()
+            Handler(Looper.getMainLooper()).postDelayed({
+                timer = object : CountDownTimer(timeLeft, 1000){
+                    override fun onTick(millisUntilFinished: Long) {
+                        timeLeft = millisUntilFinished
+                    }
+
+                    override fun onFinish() {
+                        isRunning = false
+                        onFinish()
+                    }
+                }.start()
+            }, 4000)
         }
     }
 
